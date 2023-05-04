@@ -35,7 +35,7 @@ class SortableChangeList(ChangeList):
 
     def get_ordering(self, request, queryset):
         if self.model_admin.sortable_is_enabled():
-            return [self.model_admin.sortable, '-' + self.model._meta.pk.name]
+            return [self.model_admin.sortable, f'-{self.model._meta.pk.name}']
         return super(SortableChangeList, self).get_ordering(request, queryset)
 
 
@@ -188,7 +188,7 @@ class SortableModelAdmin(SortableModelAdminBase, admin.ModelAdmin):
             max_order = obj.__class__.objects.aggregate(
                 models.Max(self.sortable))
             try:
-                next_order = max_order['%s__max' % self.sortable] + 1
+                next_order = max_order[f'{self.sortable}__max'] + 1
             except TypeError:
                 next_order = 1
             setattr(obj, self.sortable, next_order)

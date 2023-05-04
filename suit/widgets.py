@@ -65,8 +65,8 @@ class EnclosedInput(TextInput):
 
     def enclose_value(self, value, wrapper_class):
         if value.startswith("fa-"):
-            value = '<i class="fa %s"></i>' % value
-        return '<span class="input-group-%s">%s</span>' % (wrapper_class, value)
+            value = f'<i class="fa {value}"></i>'
+        return f'<span class="input-group-{wrapper_class}">{value}</span>'
 
     def render(self, name, value, attrs=None, renderer=None):
         output = super(EnclosedInput, self).render(name, value, attrs, renderer)
@@ -80,7 +80,7 @@ class EnclosedInput(TextInput):
             self.append = self.enclose_value(self.append, self.append_class)
             output = ''.join((output, self.append))
 
-        return mark_safe('<div class="%s">%s</div>' % (' '.join(div_classes), output))
+        return mark_safe(f"""<div class="{' '.join(div_classes)}">{output}</div>""")
 
 
 def _make_attrs(attrs, defaults=None, classes=None):

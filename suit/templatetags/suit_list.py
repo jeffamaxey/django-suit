@@ -30,14 +30,15 @@ def result_row_attrs(context, cl, row_index):
 
     # Validate
     if not isinstance(new_attrs, dict):
-        raise TypeError('"suit_row_attributes" must return dict. Got: %s: %s' %
-                        (new_attrs.__class__.__name__, new_attrs))
+        raise TypeError(
+            f'"suit_row_attributes" must return dict. Got: {new_attrs.__class__.__name__}: {new_attrs}'
+        )
 
     # Merge 'class' attribute
     if 'class' in new_attrs:
         attrs['class'] += ' ' + new_attrs.pop('class')
 
-    attrs.update(new_attrs)
+    attrs |= new_attrs
     return dict_to_attrs(attrs)
 
 
@@ -61,18 +62,16 @@ def headers_handler(result_headers, cl):
 
         # Validate
         if not isinstance(attrs, dict):
-            raise TypeError('"suit_column_attributes" method must return dict. '
-                            'Got: %s: %s' % (
-                                attrs.__class__.__name__, attrs))
+            raise TypeError(
+                f'"suit_column_attributes" method must return dict. Got: {attrs.__class__.__name__}: {attrs}'
+            )
 
         classes = []
-        defined_class = attrs.get('class')
-        if defined_class:
+        if defined_class := attrs.get('class'):
             classes.append(defined_class)
 
         if attrib_key in header:
-            existing_class = header[attrib_key].split('"')[1]
-            if existing_class:
+            if existing_class := header[attrib_key].split('"')[1]:
                 classes.append(existing_class)
 
         if classes:
@@ -91,9 +90,9 @@ def cells_handler(results, cl):
     if not suit_cell_attributes:
         return results
 
-    class_pattern = 'class="'
     td_pattern = '<td'
     th_pattern = '<th'
+    class_pattern = 'class="'
     for row, result in enumerate(results):
         instance = cl.result_list[row]
         for col, item in enumerate(result):
@@ -104,14 +103,14 @@ def cells_handler(results, cl):
 
             # Validate
             if not isinstance(attrs, dict):
-                raise TypeError('"suit_cell_attributes" method must return dict. '
-                                'Got: %s: %s' % (
-                                    attrs.__class__.__name__, attrs))
+                raise TypeError(
+                    f'"suit_cell_attributes" method must return dict. Got: {attrs.__class__.__name__}: {attrs}'
+                )
 
             # Merge 'class' attribute
             if class_pattern in item.split('>')[0] and 'class' in attrs:
                 css_class = attrs.pop('class')
-                replacement = '%s%s ' % (class_pattern, css_class)
+                replacement = f'{class_pattern}{css_class} '
                 result[col] = mark_safe(
                     item.replace(class_pattern, replacement))
 
@@ -128,8 +127,7 @@ def cells_handler(results, cl):
 
 
 def dict_to_attrs(attrs):
-    return mark_safe(' ' + ' '.join(['%s="%s"' % (k, v)
-                                     for k, v in attrs.items()]))
+    return mark_safe((' ' + ' '.join([f'{k}="{v}"' for k, v in attrs.items()])))
 
 
 @register.inclusion_tag('suit/search_form.html')
@@ -163,24 +161,19 @@ def suit_admin_list_filter(cl, spec):
             if key == field_key:
                 value = query_parts[key][0]
                 matched_key = key
-            elif key.startswith(
-                            field_key + '__') or '__' + field_key + '__' in key:
+            elif key.startswith(f'{field_key}__') or f'__{field_key}__' in key:
                 value = query_parts[key][0]
                 matched_key = key
 
             if value:
                 matches[matched_key] = value
 
-        # Iterate matches, use first as actual values, additional for hidden
-        i = 0
-        for key, value in matches.items():
+        for i, (key, value) in enumerate(matches.items()):
             if i == 0:
                 choice['name'] = key
                 choice['val'] = value
             else:
-                choice['additional'] = '%s=%s' % (key, value)
-            i += 1
-
+                choice['additional'] = f'{key}={value}'
     return tpl.render({
         'field_name': field_key,
         'title': spec.title,

@@ -19,9 +19,9 @@ def get_admin_url(instance, admin_prefix='admin', current_app=None):
     if not instance.pk:
         return
     return reverse_lazy(
-        '%s:%s_%s_change' % (admin_prefix, instance._meta.app_label, instance._meta.model_name),
+        f'{admin_prefix}:{instance._meta.app_label}_{instance._meta.model_name}_change',
         args=(instance.pk,),
-        current_app=current_app
+        current_app=current_app,
     )
 
 
@@ -59,10 +59,11 @@ class RelatedFieldAdminMetaclass(type(admin.ModelAdmin)):
         new_class = super(RelatedFieldAdminMetaclass, cls).__new__(cls, name, bases, attrs)
 
         for field in new_class.list_display:
-            if '__' in field or field.startswith(link_to_prefix):
-                if not hasattr(new_class, field):
-                    setattr(new_class, field, get_related_field(
-                        field, admin_prefix=cls.related_field_admin_prefix))
+            if ('__' in field or field.startswith(link_to_prefix)) and not hasattr(
+                new_class, field
+            ):
+                setattr(new_class, field, get_related_field(
+                    field, admin_prefix=cls.related_field_admin_prefix))
 
         return new_class
 

@@ -15,7 +15,7 @@ class ChildItem(object):
         self._url_name = None
 
     def _key(self):
-        if self._parent_item and self.model and not '.' in self.model:
+        if self._parent_item and self.model and '.' not in self.model:
             return '.'.join([self._parent_item._key(), self.model])
         return self.model
 
@@ -56,8 +56,7 @@ class MenuManager(object):
         self._available_apps = {'apps': {}, 'models': {}}
 
     def __iter__(self):
-        for each in self.get_menu_items():
-            yield each
+        yield from self.get_menu_items()
 
     def get_menu_items(self):
         if self.menu_items is None:
@@ -153,8 +152,7 @@ class MenuManager(object):
         """
         :type native_app: dict
         """
-        parent_item = ParentItem(native_app['name'], url=native_app['app_url'])
-        return parent_item
+        return ParentItem(native_app['name'], url=native_app['app_url'])
 
     def make_children_from_native_app(self, parent_item, native_app):
         """
@@ -170,8 +168,11 @@ class MenuManager(object):
         """
         :type native_model: dict
         """
-        child_item = ChildItem(native_model['name'],  model=native_model.get('model'), url=native_model['admin_url'])
-        return child_item
+        return ChildItem(
+            native_model['name'],
+            model=native_model.get('model'),
+            url=native_model['admin_url'],
+        )
 
     def handle_parent_menu(self, parent_item, native_app):
         """
@@ -180,13 +181,13 @@ class MenuManager(object):
         """
         if not parent_item.label:
             parent_item.label = native_app['name'] if native_app else 'Untitled'
-        if not parent_item.url:
-            if parent_item.children and parent_item.use_first_child_url:
-                parent_item.url = parent_item.children[0].url
-            elif native_app:
-                parent_item.url = native_app['app_url']
-        else:
+        if parent_item.url:
             self.handle_user_url(parent_item)
+
+        elif parent_item.children and parent_item.use_first_child_url:
+            parent_item.url = parent_item.children[0].url
+        elif native_app:
+            parent_item.url = native_app['app_url']
 
     def handle_child_menu(self, child_item, native_model):
         """
@@ -202,11 +203,10 @@ class MenuManager(object):
             child_item.label = native_model['name'] if native_model else 'Untitled'
 
         # Handle URL
-        if not child_item.url:
-            if native_model:
-                child_item.url = native_model['admin_url']
-        else:
+        if child_item.url:
             self.handle_user_url(child_item)
+        elif native_model:
+            child_item.url = native_model['admin_url']
         if not child_item.url:
             child_item.url = '#not-found'
 
@@ -288,9 +288,12 @@ class MenuManager(object):
             if active_child:
                 break
 
-            if not active_parent:
-                if url_name and url_name == parent_item._url_name or request_path == parent_item.url:
-                    active_parent = parent_item
+            if not active_parent and (
+                url_name
+                and url_name == parent_item._url_name
+                or request_path == parent_item.url
+            ):
+                active_parent = parent_item
 
         if not active_child:
             active_child = active_child_by_url

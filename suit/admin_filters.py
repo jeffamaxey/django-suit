@@ -7,7 +7,7 @@ class IsNullFieldListFilter(FieldListFilter):
     isnull_label = _('Is Null')
 
     def __init__(self, field, request, params, model, model_admin, field_path):
-        self.lookup_kwarg = '%s__isnull' % field_path
+        self.lookup_kwarg = f'{field_path}__isnull'
         self.lookup_val = request.GET.get(self.lookup_kwarg, None)
         super(IsNullFieldListFilter, self).__init__(field,
                                                     request, params, model,

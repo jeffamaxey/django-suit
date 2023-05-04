@@ -158,8 +158,7 @@ class ContinentAdmin(SortableModelAdmin):
             'Antarctica': 'table-info',
         }
 
-        css_class = class_map.get(obj.name)
-        if css_class:
+        if css_class := class_map.get(obj.name):
             return {'class': css_class}
 
     def suit_column_attributes(self, column):
@@ -324,6 +323,6 @@ def showcase_custom_view_example(request, pk):
     instance = Showcase.objects.get(pk=pk)
 
     # Do something legendary here
-    messages.success(request, 'Something legendary was done to "%s"' % instance)
+    messages.success(request, f'Something legendary was done to "{instance}"')
 
     return redirect('admin:demo_showcase_change', pk)

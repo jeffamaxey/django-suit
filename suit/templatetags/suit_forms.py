@@ -18,7 +18,7 @@ def get_form_size(fieldset):
     form_size_by_model_admin = getattr(fieldset.model_admin, 'suit_form_size', {})
 
     form_size = {}
-    form_size.update(form_size_by_config)
+    form_size |= form_size_by_config
     form_size.update(form_size_by_model_admin)
 
     return form_size
@@ -31,10 +31,8 @@ def get_form_class(field, fieldset, idx):
     if not form_size:
         raise Exception('"form_size" parameter must be set in Django Suit config')
 
-    # Try field config first
     if not field_class:
-        form_size_fields = form_size.get('fields')
-        if form_size_fields:
+        if form_size_fields := form_size.get('fields'):
             field_name = None
             if hasattr(field, 'name'):
                 field_name = field.name
@@ -46,19 +44,17 @@ def get_form_class(field, fieldset, idx):
 
     # Add widgets CSS class
     if idx == 1:
-        extra_class = ' %s' % suit_form_field_widget_class(field)
+        extra_class = f' {suit_form_field_widget_class(field)}'
 
     # Try widgets config
     widget_class_name = get_field_widget_class_name(field)
     if not field_class and widget_class_name:
-        form_size_widgets = form_size.get('widgets')
-        if form_size_widgets:
+        if form_size_widgets := form_size.get('widgets'):
             field_class = form_size_widgets.get(widget_class_name)
 
     # Try fieldset config
     if not field_class:
-        form_size_fieldset = form_size.get('fieldsets')
-        if form_size_fieldset:
+        if form_size_fieldset := form_size.get('fieldsets'):
             field_class = form_size_fieldset.get(fieldset.name)
 
     # Fallback to default
@@ -74,8 +70,7 @@ def get_form_class(field, fieldset, idx):
 
 def get_field_widget_class_name(field):
     try:
-        widget_class_name = field.field.widget.__class__.__name__
-        return widget_class_name
+        return field.field.widget.__class__.__name__
     except AttributeError:
         pass
 
@@ -101,9 +96,8 @@ def suit_form_field_widget_class(field):
     """
     Get CSS class for field by widget name, for easier styling
     """
-    widget_class_name = get_field_widget_class_name(field)
-    if widget_class_name:
-        return 'widget-%s' % widget_class_name
+    if widget_class_name := get_field_widget_class_name(field):
+        return f'widget-{widget_class_name}'
     return ''
 
 
@@ -116,7 +110,7 @@ def suit_form_conf(context, param_name, inline_admin_formset=None):
         model_admin = inline_admin_formset.opts
     else:
         model_admin = context['adminform'].model_admin
-    param_by_model_admin = getattr(model_admin, 'suit_%s' % param_name, None)
+    param_by_model_admin = getattr(model_admin, f'suit_{param_name}', None)
     if param_by_model_admin is not None:
         return param_by_model_admin
     return get_config(param_name, context['request'])
